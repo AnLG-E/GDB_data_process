@@ -4,7 +4,7 @@ clc; clear;
 folderPath = 'C:\Users\Liluo\Desktop\轨道板数据\data_GDB\k13';
 data = catch_data(folderPath, 1);
 
-%% 数据预处理
+%% 数据预处理aa
 % 有没有不用data.字段名的方法
 % 直接将结构体转换为数组
 dataArray = struct2array(data);
@@ -13,6 +13,7 @@ fieldNames = fieldnames(data);
 
 time = dataArray(1,1).vib_data(:,1);
 z_data = dataArray(1,1).vib_data(:,3);
+ 
 % 绘制第一个变量的空间图
 figure;
 plot(time,z_data);
@@ -27,36 +28,36 @@ ylabel(strrep('垂向振动数据','_','\_'));
 
 %% 计算RMS值
 % 设置窗口参数
-window_size = 1000;
-window_type = 'hann';  % 或 'hamming', 'rectangular'
+window_size = 8000;
+% window_type = 'hann';  % 或 'hamming', 'rectangular'
+threshold = 0.11002;
+% 使用quick_activity_detect函数
+[starts, ends, rms] = quick_activity_detect(z_data, window_size, threshold, 25, 50);
 
-% 手动实现滑动窗口RMS
-% 使用示例
-rms_z = sliding_rms_vectorized(z_data, window_size, window_type);
-% rms_z = zeros(size(z_data));
-% for i = window_size:length(z_data)
-%     window_data = z_data(i-window_size+1:i);
-    
-%     % 应用窗函数（可选）
-%     if strcmp(window_type, 'hann')
-%         win = hann(window_size);
-%     elseif strcmp(window_type, 'hamming')
-%         win = hamming(window_size);
-%     else
-%         win = ones(window_size, 1);  % 矩形窗
-%     end
-    
-%     window_data_windowed = window_data .* win;
-%     rms_z(i) = sqrt(mean(window_data_windowed.^2));
-% end
-
-% 处理前window_size-1个点（设为NaN或使用较小窗口）
-rms_z(1:window_size-1) = NaN;
 
 % 并将RMS值用折线图表示
 figure;
-plot(time, rms_z);
+plot(time, rms);
+% 用threshold来绘制阈值的水平虚线
+line([time(1) time(end)], [threshold threshold], 'Color', 'b', 'LineStyle', '--');
 title('垂向振动数据的RMS值');
 xlabel(strrep(fieldNames{1},'_','\_'));
 ylabel(strrep('RMS值','_','\_'));
+axis([time(1) time(end) min(rms) max(rms)]);
 
+% 通过starts和ends来切分z_data
+z_data_segments = cell(length(starts), 1);
+for i = 1:length(starts)
+    z_data_segments{i} = z_data(starts(i):ends(i));
+end
+
+% 绘制切分后的z_data
+figure;
+for i = 1:length(starts)
+    figure;
+    plot(time(starts(i):ends(i)), z_data_segments{i});
+    title(['活动段 ' num2str(i)]);
+    xlabel(strrep(fieldNames{1},'_','\_'));
+    ylabel(strrep('垂向振动数据','_','\_'));
+    axis([time(starts(i)) time(ends(i)) min(z_data_segments{i}) max(z_data_segments{i})]);
+end
