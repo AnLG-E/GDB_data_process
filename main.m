@@ -1,5 +1,5 @@
 clc; clear;
-%% 读取数据
+%% 读取数据-lhh
 % 定义文件夹路径
 folderPath = 'F:\GDB\k13';
 data = catch_data(folderPath, 1);
