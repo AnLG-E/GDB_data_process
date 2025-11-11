@@ -17,7 +17,7 @@ function [starts, ends, rms_signal] = quick_activity_detect(signal, win_size, th
         rms_signal(i) = sqrt(mean(window));
     end
     
-    % 剩余部分保持原样
+    % 直接重现原代码的活动段检测逻辑，但向量化处理
     active = rms_signal > threshold;
     d_active = diff([false, active, false]);
     starts = find(d_active == 1);
@@ -41,4 +41,7 @@ function [starts, ends, rms_signal] = quick_activity_detect(signal, win_size, th
     valid = (ends - starts) >= min_len;
     starts = starts(valid);
     ends = ends(valid);
+    % 这里的starts格式是1xN的向量，每个元素是活动开始的索引
+    % 这里的ends格式是1xN的向量，每个元素是活动结束的索引
+    % 不是矩阵，是向量
 end
